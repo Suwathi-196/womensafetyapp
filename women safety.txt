@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Women Safety App – Full Prototype</title>
+<style>
+body{margin:0;font-family:Arial;background:#f4f4f4}
+.app{max-width:390px;margin:auto;background:#fff;min-height:100vh;border-radius:20px;overflow:hidden;box-shadow:0 0 15px rgba(0,0,0,.2)}
+header{background:#d81b60;color:#fff;padding:15px;text-align:center;font-size:20px}
+.screen{display:none;padding:20px;animation:slide .3s}
+.screen.active{display:block}
+@keyframes slide{from{transform:translateX(100%)}to{transform:translateX(0)}}
+button{width:100%;padding:12px;margin:8px 0;border:none;background:#e91e63;color:#fff;font-size:16px;border-radius:8px}
+.sos{background:red;width:200px;height:200px;border-radius:50%;font-size:28px;font-weight:bold;display:block;margin:20px auto}
+input{width:100%;padding:10px;margin:8px 0}
+.map{width:100%;height:200px;border-radius:10px}
+.contact{background:#eee;padding:10px;border-radius:6px;margin:5px 0}
+</style>
+</head>
+<body>
+<div class="app">
+<header>Women Safety App</header>
+
+<!-- LOGIN -->
+<div class="screen active" id="login">
+<h3>Login</h3>
+<input placeholder="Email">
+<input placeholder="Password" type="password">
+<button onclick="openScreen('home')">Login</button>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="home">
+<button class="sos" onclick="startSOS()">SOS</button>
+<button onclick="startRecording()">🎙 Auto Audio Recording</button>
+<button onclick="openScreen('location')">📍 Location</button>
+<button onclick="openScreen('call')">📞 Fake Call</button>
+<button onclick="openScreen('contacts')">👥 Contacts</button>
+<div id="countdown" style="text-align:center;font-size:20px"></div>
+<p id="recStatus" style="text-align:center;color:green"></p>
+</div>
+
+<!-- LOCATION -->
+<div class="screen" id="location">
+<h3>Live Location</h3>
+<iframe class="map" src="https://maps.google.com/maps?q=India&z=13&output=embed"></iframe>
+<button onclick="openScreen('home')">Back</button>
+</div>
+
+<!-- FAKE CALL -->
+<div class="screen" id="call">
+<h2>📞 Incoming Call</h2>
+<p>Mom ❤️</p>
+<button onclick="openScreen('home')">End Call</button>
+</div>
+
+<!-- CONTACTS -->
+<div class="screen" id="contacts">
+<h3>Emergency Contacts</h3>
+<input id="cname" placeholder="Name">
+<input id="cphone" placeholder="Phone">
+<button onclick="addContact()">Add</button>
+<div id="list"></div>
+<button onclick="openScreen('home')">Back</button>
+</div>
+</div>
+
+<script>
+function openScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+
+let timer;
+function startSOS(){let c=5;document.getElementById('countdown').innerText='SOS in '+c;timer=setInterval(()=>{c--;document.getElementById('countdown').innerText='SOS in '+c;if(c==0){clearInterval(timer);alert('SOS SENT (Demo)');if(navigator.vibrate)navigator.vibrate([300,200,300]);document.getElementById('countdown').innerText='';}},1000)}
+
+function addContact(){let n=cname.value,p=cphone.value;if(!n||!p)return;let d=document.createElement('div');d.className='contact';d.innerText=n+' - '+p;list.appendChild(d);cname.value='';cphone.value=''}
+let mediaRecorder;let audioChunks=[];
+function startRecording(){
+  if(!navigator.mediaDevices){alert('Recording not supported');return;}
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    mediaRecorder=new MediaRecorder(stream);
+    mediaRecorder.start();
+    document.getElementById('recStatus').innerText='Recording started...';
+    mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);
+    mediaRecorder.onstop=()=>{
+      const audioBlob=new Blob(audioChunks,{type:'audio/webm'});
+      const url=URL.createObjectURL(audioBlob);
+      const a=document.createElement('a');
+      a.href=url;a.download='sos-audio.webm';a.click();
+      audioChunks=[];
+      document.getElementById('recStatus').innerText='Recording saved';
+    }
+    setTimeout(()=>mediaRecorder.stop(),10000);
+  });
+}
+</script>
+</body>
+</html>
